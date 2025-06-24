@@ -1,25 +1,44 @@
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useState } from "react";
+import { db } from "./Firebase";
 
 export default function App() {
-  const [endpoint, setEndpoint] = useState("/api/example");
+  const [endpoint, setEndpoint] = useState("/api/teste");
   const [method, setMethod] = useState("GET");
-  const [response, setResponse] = useState('{"message": "Hello World"}');
+  const [response, setResponse] = useState('{"message": "Teste de conexão"}');
+  const [loading, setLoading] = useState(false);
 
-  const handleCreateMock = () => {
-    alert(`Mock criado:\n${method} ${endpoint}\nResponse: ${response}`);
+  const handleCreateMock = async () => {
+    setLoading(true);
+    try {
+      await addDoc(collection(db, "mocks"), {
+        endpoint,
+        method,
+        response,
+        createdAt: serverTimestamp(),
+      });
+      alert("Mock salvo com sucesso no Firestore!");
+    } catch (error) {
+      alert("Erro ao salvar mock: " + error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="container">
-      <h1>MockyHub</h1>
+    <div
+      style={{
+        maxWidth: 600,
+        margin: "2rem auto",
+        padding: "1rem",
+        background: "#fff",
+        borderRadius: 8,
+      }}
+    >
+      <h1>Teste de Mock Firestore</h1>
 
       <label>Endpoint</label>
-      <input
-        type="text"
-        value={endpoint}
-        onChange={(e) => setEndpoint(e.target.value)}
-        placeholder="/api/example"
-      />
+      <input value={endpoint} onChange={(e) => setEndpoint(e.target.value)} />
 
       <label>Método</label>
       <select value={method} onChange={(e) => setMethod(e.target.value)}>
@@ -36,7 +55,9 @@ export default function App() {
         onChange={(e) => setResponse(e.target.value)}
       />
 
-      <button onClick={handleCreateMock}>Criar Mock</button>
+      <button onClick={handleCreateMock} disabled={loading}>
+        {loading ? "Salvando..." : "Salvar Mock"}
+      </button>
     </div>
   );
 }
